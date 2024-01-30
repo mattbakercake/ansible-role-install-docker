@@ -1,0 +1,90 @@
+- name: Make sure old docker versions not already installed
+  become: yes
+  package:
+    name:
+    - docker
+    - docker.io
+    - docker-engine
+    - docker-doc
+    - docker-compose
+    - docker-compose-v2
+    - podman-docker
+    - containerd
+    - runc
+    state: absent
+
+- name: Install dependencies
+  become: yes
+  apt:
+    name:
+    - ca-certificates
+    - curl
+    - gnupg2
+    state: present
+
+- name: Add docker apt gpg key
+  become: yes
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ansible_distribution | lower}}/gpg"
+    dest: /etc/apt/trusted.gpg.d/docker.asc
+    mode: '0644'
+    force: false
+    checksum: "sha256:1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570"
+  register: add_repository_key
+
+- name: Add docker repository
+  become: yes
+  apt_repository:
+    repo: "deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/trusted.gpg.d/docker.asc] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+    state: present
+    filename: "docker"
+    update_cache: true
+
+- name: Install docker
+  become: yes
+  package:
+    name:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin
+    state: present
+  notify: restart docker
+
+- name: Start docker at boot
+  become: yes
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Get docker group info using getent.
+  become: yes
+  getent:
+    database: group
+    key: docker
+    split: ':'
+
+- name: Add admin user to docker group
+  become: yes
+  set_fact:
+    at_least_one_user_to_modify: true
+  when:
+  - item not in ansible_facts.getent_group["docker"][2]
+  with_items: "admin"
+
+- name: Create docker persistant data dir
+  become: yes
+  ansible.builtin.file:
+    path: "{{ docker_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Create docker-compose dir
+  become: yes
+  ansible.builtin.file:
+    path: "{{ docker_compose_dir }}"
+    state: directory
+    mode: '0755'
+
