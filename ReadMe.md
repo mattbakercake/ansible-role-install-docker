@@ -7,6 +7,6 @@ to the docker group
 
 see `defaults\main.yaml`
 
-`docker_apt_arch` - docker repo architecture to install - default guesses based on ansible_arhitecture core variable
-`docker_dir` - docker dir
-`docker_compose_dir`: - docker compose dir
+* `docker_apt_arch` - docker repo architecture to install - default guesses based on ansible_arhitecture core variable
+* `docker_dir` - docker dir
+* `docker_compose_dir`: - docker compose dir
