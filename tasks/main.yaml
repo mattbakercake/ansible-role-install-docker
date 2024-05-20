@@ -88,3 +88,9 @@
     state: directory
     mode: '0755'
 
+- name: Copy the .env file
+  become: true
+  template:
+    src: templates/.env
+    dest: "{{ docker_compose_dir }}/.env"
+
