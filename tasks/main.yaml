@@ -52,6 +52,9 @@
     state: present
   notify: restart docker
 
+- name: Flush handlers #force preceeding handler to run immediately
+  meta: flush_handlers
+
 - name: Start docker at boot
   become: yes
   service:
